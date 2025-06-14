@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HelixDrop - HTML5 Arcade Game | Play Free Online</title>
+    <meta name="description" content="Play HelixDrop, a thrilling 3D vertical ball game inspired by Helix Jump. Navigate through rotating platforms, avoid obstacles, and achieve high scores in this addictive mobile game.">
+    <meta name="keywords" content="helix jump, ball game, arcade game, mobile game, HTML5 game, free online game">
+    <meta name="author" content="Sarthak Sharma">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="HelixDrop - Free HTML5 Arcade Game">
+    <meta property="og:description" content="Play the addictive 3D ball bouncing game directly in your browser. No downloads required!">
+    <meta property="og:type" content="website">
+    
+    <!-- External Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        
+        .game-title {
+            font-family: 'Orbitron', monospace;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .game-canvas {
+            border: 3px solid #4ecdc4;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(78, 205, 196, 0.3);
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+        }
+        
+        .neon-button {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+        }
+        
+        .neon-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.6);
+        }
+        
+        .score-display {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 15px;
+            color: white;
+        }
+        
+        .platform {
+            position: absolute;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #4ecdc4, #45b7d1, #96ceb4, #4ecdc4);
+        }
+        
+        .platform-gap {
+            background: transparent !important;
+        }
+        
+        .platform-danger {
+            background: conic-gradient(from 0deg, #ff6b6b, #ff4757, #ff3838, #ff6b6b) !important;
+        }
+        
+        .ball {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle at 30% 30%, #fff, #4ecdc4, #45b7d1);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.8);
+            z-index: 100;
+        }
+        
+        .page-section {
+            display: none;
+        }
+        
+        .page-section.active {
+            display: block;
+        }
+        
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: #4ecdc4 !important;
+        }
+        
+        .adsense-placeholder {
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            border: 2px dashed #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 14px;
+            min-height: 100px;
+        }
+        
+        @media (max-width: 768px) {
+            .game-canvas {
+                width: 100% !important;
+                height: 400px !important;
+            }
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #4ecdc4;
+            border-radius: 50%;
+            animation: particle-float 2s ease-out forwards;
+        }
+        
+        @keyframes particle-float {
+            0% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.5) translateY(-50px);
+            }
+        }
+        
+        .footer-wave {
+            background: linear-gradient(45deg, #4ecdc4, #45b7d1);
+            height: 4px;
+            width: 100%;
+            animation: wave 2s ease-in-out infinite;
+        }
+        
+        @keyframes wave {
+            0%, 100% { transform: scaleX(1); }
+            50% { transform: scaleX(1.1); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <!-- Header -->
+    <header class="bg-gray-800 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <nav class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold game-title cursor-pointer" onclick="showPage('game')">
+                    <i class="fas fa-gamepad mr-2"></i>HelixDrop
+                </h1>
+                
+                <div class="hidden md:flex space-x-6">
+                    <a href="#" class="nav-link text-gray-300 hover:text-white" onclick="showPage('game')">Game</a>
+                    <a href="#" class="nav-link text-gray-300 hover:text-white" onclick="showPage('about')">About</a>
+                    <a href="#" class="nav-link text-gray-300 hover:text-white" onclick="showPage('privacy')">Privacy</a>
+                    <a href="#" class="nav-link text-gray-300 hover:text-white" onclick="showPage('contact')">Contact</a>
+                </div>
+                
+                <div class="md:hidden">
+                    <button onclick="toggleMobileMenu()" class="text-white">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </nav>
+            
+            <!-- Mobile Menu -->
+            <div id="mobileMenu" class="md:hidden mt-4 hidden">
+                <div class="flex flex-col space-y-2">
+                    <a href="#" class="nav-link text-gray-300 py-2" onclick="showPage('game'); toggleMobileMenu()">Game</a>
+                    <a href="#" class="nav-link text-gray-300 py-2" onclick="showPage('about'); toggleMobileMenu()">About</a>
+                    <a href="#" class="nav-link text-gray-300 py-2" onclick="showPage('privacy'); toggleMobileMenu()">Privacy</a>
+                    <a href="#" class="nav-link text-gray-300 py-2" onclick="showPage('contact'); toggleMobileMenu()">Contact</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- AdSense Top Banner -->
+    <div class="adsense-placeholder mx-4 my-4 rounded-lg">
+        <span>AdSense Banner Advertisement (728x90)</span>
+    </div>
+
+    <!-- Game Page -->
+    <section id="gamePage" class="page-section active">
+        <div class="container mx-auto px-4 py-8">
+            <!-- Game Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="score-display text-center">
+                    <div class="text-2xl font-bold text-yellow-400" id="currentScore">0</div>
+                    <div class="text-sm text-gray-300">Score</div>
+                </div>
+                <div class="score-display text-center">
+                    <div class="text-2xl font-bold text-purple-400" id="currentLevel">1</div>
+                    <div class="text-sm text-gray-300">Level</div>
+                </div>
+                <div class="score-display text-center">
+                    <div class="text-2xl font-bold text-green-400" id="highScore">0</div>
+                    <div class="text-sm text-gray-300">High Score</div>
+                </div>
+            </div>
+
+            <!-- Game Container -->
+            <div class="flex flex-col items-center">
+                <canvas id="gameCanvas" class="game-canvas" width="400" height="600"></canvas>
+                
+                <!-- Game Controls -->
+                <div class="mt-6 flex flex-wrap justify-center gap-4">
+                    <button id="playBtn" class="neon-button">
+                        <i class="fas fa-play mr-2"></i>Play Now
+                    </button>
+                    <button id="restartBtn" class="neon-button">
+                        <i class="fas fa-redo mr-2"></i>Restart
+                    </button>
+                    <button id="muteBtn" class="neon-button">
+                        <i class="fas fa-volume-up mr-2"></i>Sound
+                    </button>
+                </div>
+                
+                <!-- Game Instructions -->
+                <div class="mt-8 bg-gray-800 rounded-lg p-6 max-w-2xl">
+                    <h3 class="text-xl font-bold mb-4 text-center game-title">How to Play</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div class="flex items-center">
+                            <i class="fas fa-mouse text-blue-400 mr-3"></i>
+                            <span>Click/Touch to rotate platforms</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-keyboard text-green-400 mr-3"></i>
+                            <span>Use Arrow Keys to control</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-circle text-red-400 mr-3"></i>
+                            <span>Avoid red danger zones</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-trophy text-yellow-400 mr-3"></i>
+                            <span>Score points by passing levels</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AdSense Rectangle -->
+            <div class="adsense-placeholder mx-auto my-8 max-w-md rounded-lg">
+                <span>AdSense Rectangle Advertisement (300x250)</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Page -->
+    <section id="aboutPage" class="page-section">
+        <div class="container mx-auto px-4 py-8 max-w-4xl">
+            <div class="bg-gray-800 rounded-lg p-8">
+                <h2 class="text-4xl font-bold mb-8 text-center game-title">About HelixDrop</h2>
+                
+                <div class="prose prose-invert max-w-none">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                        <div>
+                            <h3 class="text-2xl font-semibold mb-4 text-blue-400">Welcome to HelixDrop!</h3>
+                            <p class="text-gray-300 leading-relaxed mb-4">
+                                HelixDrop is a thrilling, challenging, and addictive vertical ball-drop game inspired by the popular Helix Jump. 
+                                Experience the excitement of navigating a bouncing ball through rotating helix platforms in this HTML5 arcade masterpiece.
+                            </p>
+                            <p class="text-gray-300 leading-relaxed">
+                                Developed with passion for casual gamers of all ages, HelixDrop delivers fast-paced, mobile-friendly gaming 
+                                without requiring downloads or registration. Jump in and start playing instantly!
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-2xl font-semibold mb-4 text-green-400">Game Features</h3>
+                            <ul class="text-gray-300 space-y-2">
+                                <li class="flex items-center"><i class="fas fa-check text-green-400 mr-3"></i>3D-style visual effects</li>
+                                <li class="flex items-center"><i class="fas fa-check text-green-400 mr-3"></i>Progressive difficulty levels</li>
+                                <li class="flex items-center"><i class="fas fa-check text-green-400 mr-3"></i>Smooth physics simulation</li>
+                                <li class="flex items-center"><i class="fas fa-check text-green-400 mr-3"></i>Touch and keyboard controls</li>
+                                <li class="flex items-center"><i class="fas fa-check text-green-400 mr-3"></i>Mobile-optimized gameplay</li>
+                                <li class="flex items-center"><i class="fas fa-check text-green-400 mr-3"></i>Local high score tracking</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-blue-900 to-purple-900 rounded-lg p-6 mb-8">
+                        <h3 class="text-2xl font-semibold mb-4 text-center">Developer Information</h3>
+                        <div class="text-center">
+                            <p class="text-lg mb-2"><strong>Developer:</strong> Sarthak Sharma</p>
+                            <p class="text-gray-300 mb-2"><strong>Location:</strong> Gopal Colony, Tikuria Tola, Satna, Madhya Pradesh, India</p>
+                            <p class="text-gray-300 mb-4"><strong>Specialization:</strong> Independent Game Developer & Web Developer</p>
+                            <p class="text-gray-300">
+                                Passionate about creating engaging, accessible games that bring joy to players worldwide. 
+                                Committed to delivering high-quality gaming experiences through modern web technologies.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <h3 class="text-2xl font-semibold mb-4 text-purple-400">Our Mission</h3>
+                        <p class="text-gray-300 text-lg leading-relaxed">
+                            To create engaging, accessible, and fun gaming experiences that can be enjoyed by anyone, anywhere, 
+                            on any device. We believe in the power of games to entertain, challenge, and bring people together.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Privacy Policy Page -->
+    <section id="privacyPage" class="page-section">
+        <div class="container mx-auto px-4 py-8 max-w-4xl">
+            <div class="bg-gray-800 rounded-lg p-8">
+                <h2 class="text-4xl font-bold mb-8 text-center game-title">Privacy Policy</h2>
+                
+                <div class="prose prose-invert max-w-none text-gray-300">
+                    <p class="text-sm text-gray-400 mb-6"><strong>Last Updated:</strong> December 2024</p>
+                    
+                    <div class="space-y-8">
+                        <section>
+                            <h3 class="text-2xl font-semibold mb-4 text-blue-400">Information We Collect</h3>
+                            <p class="mb-4">
+                                HelixDrop is committed to protecting your privacy. We collect minimal information to provide you with the best gaming experience:
+                            </p>
+                            <ul class="list-disc pl-6 space-y-2">
+                                <li><strong>Game Data:</strong> Your scores and game progress are stored locally on your device using browser local storage.</li>
+                                <li><strong>Usage Analytics:</strong> We may collect anonymous usage data to improve our game performance and user experience.</li>
+                                <li><strong>No Personal Data:</strong> We do not collect, store, or process any personal information such as names, email addresses, or contact details.</li>
+                            </ul>
+                        </section>
+                        
+                        <section>
+                            <h3 class="text-2xl font-semibold mb-4 text-green-400">Cookies and Local Storage</h3>
+                            <p class="mb-4">Our website uses:</p>
+                            <ul class="list-disc pl-6 space-y-2">
+                                <li><strong>Local Storage:</strong> To save your game progress, high scores, and preferences locally on your device.</li>
+                                <li><strong>Essential Cookies:</strong> Only necessary cookies for basic website functionality.</li>
+                                <li><strong>Third-party Cookies:</strong> Google AdSense may place cookies for advertising purposes (see below).</li>
+                            </ul>
+                        </section>
+                        
+                        <section>
+                            <h3 class="text-2xl font-semibold mb-4 text-yellow-400">Google AdSense</h3>
+                            <p class="mb-4">
+                                This website uses Google AdSense to display advertisements. Google AdSense may:
+                            </p>
+                            <ul class="list-disc pl-6 space-y-2">
+                                <li>Use cookies to serve ads based on your visits to this site and other sites on the Internet.</li>
+                                <li>Collect information about your browsing behavior for advertising purposes.</li>
+                                <li>Display personalized ads based on your interests.</li>
+                            </ul>
+                            <p class="mt-4">
+                                You can opt out of personalized advertising by visiting 
+                                <a href="https://www.google.com/settings/ads" class="text-blue-400 underline" target="_blank">Google's Ads Settings</a>.
+                            </p>
+                        </section>
+                        
+                        <section>
+                            <h3 class="text-2xl font-semibold mb-4 text-purple-400">Data Security</h3>
+                            <p>
+                                Since we don't collect personal information, there's minimal risk to your privacy. All game data is stored 
+                                locally on your device and never transmitted to our servers. We implement standard web security practices 
+                                to protect our website and ensure a safe gaming environment.
+                            </p>
+                        </section>
+                        
+                        <section>
+                            <h3 class="text-2xl font-semibold mb-4 text-red-400">Children's Privacy</h3>
+                            <p>
+                                Our game is suitable for all ages. We do not knowingly collect any information from children under 13. 
+                                If you are a parent and believe your child has used our website, please contact us and we will address any concerns.
+                            </p>
+                        </section>
+                        
+                        <section>
+                            <h3 class="text-2xl font-semibold mb-4 text-indigo-400">Contact Information</h3>
+                            <p>
+                                If you have any questions about this Privacy Policy, please contact us:
+                            </p>
+                            <div class="bg-gray-700 rounded-lg p-4 mt-4">
+                                <p><strong>Email:</strong> sarthaks42388434@gmail.com</p>
+                                <p><strong>Developer:</strong> Sarthak Sharma</p>
+                                <p><strong>Location:</strong> Gopal Colony, Tikuria Tola, Satna, Madhya Pradesh, India</p>
+                            </div>
+                        </section>
+                        
+                        <section>
+                            <h3 class="text-2xl font-semibold mb-4 text-teal-400">Changes to Privacy Policy</h3>
+                            <p>
+                                We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated revision date. 
+                                We encourage you to review this Privacy Policy periodically.
+                            </p>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Page -->
+    <section id="contactPage" class="page-section">
+        <div class="container mx-auto px-4 py-8 max-w-4xl">
+            <div class="bg-gray-800 rounded-lg p-8">
+                <h2 class="text-4xl font-bold mb-8 text-center game-title">Contact Us</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Contact Information -->
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-6 text-blue-400">Get in Touch</h3>
+                        <p class="text-gray-300 mb-6 leading-relaxed">
+                            Have questions, suggestions, or feedback about HelixDrop? We'd love to hear from you! 
+                            Reach out to us using the contact information below.
+                        </p>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-user text-green-400 mr-4 text-xl"></i>
+                                <div>
+                                    <div class="font-semibold">Sarthak Sharma</div>
+                                    <div class="text-gray-400 text-sm">Independent Game Developer</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <i class="fas fa-envelope text-blue-400 mr-4 text-xl"></i>
+                                <div>
+                                    <a href="mailto:sarthaks42388434@gmail.com" class="text-blue-400 hover:text-blue-300">
+                                        sarthaks42388434@gmail.com
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <i class="fas fa-map-marker-alt text-red-400 mr-4 text-xl"></i>
+                                <div>
+                                    <div>Gopal Colony, Tikuria Tola</div>
+                                    <div class="text-gray-400">Satna, Madhya Pradesh, India</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <i class="fas fa-clock text-yellow-400 mr-4 text-xl"></i>
+                                <div>
+                                    <div>Response Time</div>
+                                    <div class="text-gray-400">Usually within 24-48 hours</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 p-4 bg-gradient-to-r from-green-900 to-blue-900 rounded-lg">
+                            <h4 class="font-semibold mb-2">What can you contact us about?</h4>
+                            <ul class="text-sm text-gray-300 space-y-1">
+                                <li>• Bug reports and technical issues</li>
+                                <li>• Feature requests and suggestions</li>
+                                <li>• Game feedback and reviews</li>
+                                <li>• Business inquiries and partnerships</li>
+                                <li>• General questions about HelixDrop</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Form -->
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-6 text-purple-400">Send Message</h3>
+                        <form id="contactForm" class="space-y-4">
+                            <div>
+                                <label for="name" class="block text-sm font-medium mb-2">Name</label>
+                                <input type="text" id="name" name="name" required 
+                                       class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white">
+                            </div>
+                            
+                            <div>
+                                <label for="email" class="block text-sm font-medium mb-2">Email</label>
+                                <input type="email" id="email" name="email" required 
+                                       class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white">
+                            </div>
+                            
+                            <div>
+                                <label for="subject" class="block text-sm font-medium mb-2">Subject</label>
+                                <select id="subject" name="subject" 
+                                        class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white">
+                                    <option>General Inquiry</option>
+                                    <option>Bug Report</option>
+                                    <option>Feature Request</option>
+                                    <option>Feedback</option>
+                                    <option>Business Inquiry</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="message" class="block text-sm font-medium mb-2">Message</label>
+                                <textarea id="message" name="message" rows="5" required 
+                                          class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white"
+                                          placeholder="Tell us more about your inquiry..."></textarea>
+                            </div>
+                            
+                            <button type="submit" class="w-full neon-button">
+                                <i class="fas fa-paper-plane mr-2"></i>Send Message
+                            </button>
+                        </form>
+                        
+                        <div id="formMessage" class="mt-4 p-4 rounded-lg hidden"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 mt-16">
+        <div class="footer-wave"></div>
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 game-title">HelixDrop</h3>
+                    <p class="text-gray-400 text-sm">
+                        An addictive HTML5 arcade game inspired by Helix Jump. 
+                        Play anywhere, anytime, on any device!
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+                    <div class="space-y-2 text-sm">
+                        <a href="#" onclick="showPage('game')" class="block text-gray-400 hover:text-white nav-link">Play Game</a>
+                        <a href="#" onclick="showPage('about')" class="block text-gray-400 hover:text-white nav-link">About Us</a>
+                        <a href="#" onclick="showPage('privacy')" class="block text-gray-400 hover:text-white nav-link">Privacy Policy</a>
+                        <a href="#" onclick="showPage('contact')" class="block text-gray-400 hover:text-white nav-link">Contact</a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Developer</h4>
+                    <div class="text-sm text-gray-400 space-y-1">
+                        <p><strong>Sarthak Sharma</strong></p>
+                        <p>Independent Game Developer</p>
+                        <p>Satna, Madhya Pradesh, India</p>
+                        <a href="mailto:sarthaks42388434@gmail.com" class="text-blue-400 hover:text-blue-300">
+                            sarthaks42388434@gmail.com
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400 text-sm">
+                <p>&copy; 2024 HelixDrop. Developed by Sarthak Sharma. All rights reserved.</p>
+                <p class="mt-2">Play responsibly. This game is suitable for all ages.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- AdSense Bottom Banner -->
+    <div class="adsense-placeholder mx-4 my-4 rounded-lg">
+        <span>AdSense Banner Advertisement (728x90)</span>
+    </div>
+
+    <script>
+        // Game Variables
+        let canvas = document.getElementById('gameCanvas');
+        let ctx = canvas.getContext('2d');
+        let gameState = 'menu'; // menu, playing, gameOver
+        let score = 0;
+        let level = 1;
+        let highScore = localStorage.getItem('helixdrop-highscore') || 0;
+        let soundEnabled = true;
+        
+        // Game Objects
+        let ball = {
+            x: canvas.width / 2,
+            y: 100,
+            radius: 10,
+            velY: 0,
+            color: '#4ecdc4'
+        };
+        
+        let platforms = [];
+        let particles = [];
+        let rotation = 0;
+        let rotationSpeed = 0;
+        let gameSpeed = 1;
+        
+        // Game Constants
+        const GRAVITY = 0.3;
+        const BOUNCE_DAMPING = 0.7;
+        const PLATFORM_HEIGHT = 20;
+        const PLATFORM_SPACING = 120;
+        const GAP_SIZE = 100;
+        
+        // Initialize Game
+        function initGame() {
+            document.getElementById('highScore').textContent = highScore;
+            generatePlatforms();
+            gameLoop();
+        }
+        
+        // Generate Platforms
+        function generatePlatforms() {
+            platforms = [];
+            for (let i = 0; i < 20; i++) {
+                let platform = {
+                    y: 200 + i * PLATFORM_SPACING,
+                    radius: 150,
+                    gapStart: Math.random() * 360,
+                    gapSize: GAP_SIZE + Math.random() * 50,
+                    isDanger: Math.random() < 0.3 && i > 2,
+                    color: Math.random() < 0.3 ? '#ff6b6b' : '#4ecdc4'
+                };
+                platforms.push(platform);
+            }
+        }
+        
+        // Game Loop
+        function gameLoop() {
+            update();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Update Game State
+        function update() {
+            if (gameState !== 'playing') return;
+            
+            // Update ball physics
+            ball.velY += GRAVITY;
+            ball.y += ball.velY;
+            
+            // Update rotation
+            rotation += rotationSpeed;
+            if (rotation > 360) rotation -= 360;
+            if (rotation < 0) rotation += 360;
+            
+            // Check platform collisions
+            checkCollisions();
+            
+            // Update particles
+            updateParticles();
+            
+            // Check if ball is off screen
+            if (ball.y > canvas.height + 100) {
+                gameOver();
+            }
+            
+            // Level progression
+            if (score > level * 100) {
+                level++;
+                gameSpeed += 0.1;
+                document.getElementById('currentLevel').textContent = level;
+                addParticles(ball.x, ball.y, '#ffd700');
+            }
+            
+            // Move platforms up as ball progresses
+            if (ball.y > canvas.height / 2) {
+                platforms.forEach(platform => platform.y -= ball.velY);
+                ball.y -= ball.velY;
+            }
+        }
+        
+        // Check Collisions
+        function checkCollisions() {
+            platforms.forEach((platform, index) => {
+                if (ball.y + ball.radius > platform.y - PLATFORM_HEIGHT/2 && 
+                    ball.y - ball.radius < platform.y + PLATFORM_HEIGHT/2) {
+                    
+                    let ballAngle = Math.atan2(ball.y - platform.y, ball.x - canvas.width/2) * 180 / Math.PI + rotation;
+                    if (ballAngle < 0) ballAngle += 360;
+                    
+                    let distanceFromCenter = Math.sqrt(
+                        Math.pow(ball.x - canvas.width/2, 2) + 
+                        Math.pow(ball.y - platform.y, 2)
+                    );
+                    
+                    if (distanceFromCenter < platform.radius) {
+                        let gapEnd = platform.gapStart + platform.gapSize;
+                        if (gapEnd > 360) gapEnd -= 360;
+                        
+                        let inGap = false;
+                        if (platform.gapStart < gapEnd) {
+                            inGap = ballAngle >= platform.gapStart && ballAngle <= gapEnd;
+                        } else {
+                            inGap = ballAngle >= platform.gapStart || ballAngle <= gapEnd;
+                        }
+                        
+                        if (!inGap) {
+                            if (platform.isDanger || platform.color === '#ff6b6b') {
+                                gameOver();
+                                return;
+                            } else {
+                                // Bounce
+                                ball.velY = -Math.abs(ball.velY) * BOUNCE_DAMPING;
+                                ball.y = platform.y - PLATFORM_HEIGHT/2 - ball.radius;
+                                
+                                // Score
+                                score += 10;
+                                document.getElementById('currentScore').textContent = score;
+                                
+                                // Effects
+                                addParticles(ball.x, ball.y, platform.color);
+                                
+                                // Remove passed platforms
+                                if (index < platforms.length - 5) {
+                                    platforms.splice(index, 1);
+                                    addNewPlatform();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Add New Platform
+        function addNewPlatform() {
+            let lastPlatform = platforms[platforms.length - 1];
+            let newPlatform = {
+                y: lastPlatform.y + PLATFORM_SPACING,
+                radius: 150 + Math.random() * 50,
+                gapStart: Math.random() * 360,
+                gapSize: GAP_SIZE - level * 2,
+                isDanger: Math.random() < 0.3 + level * 0.05,
+                color: Math.random() < 0.3 + level * 0.1 ? '#ff6b6b' : '#4ecdc4'
+            };
+            platforms.push(newPlatform);
+        }
+        
+        // Add Particles
+        function addParticles(x, y, color) {
+            for (let i = 0; i < 8; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    velX: (Math.random() - 0.5) * 10,
+                    velY: (Math.random() - 0.5) * 10,
+                    life: 1,
+                    color: color
+                });
+            }
+        }
+        
+        // Update Particles
+        function updateParticles() {
+            particles.forEach((particle, index) => {
+                particle.x += particle.velX;
+                particle.y += particle.velY;
+                particle.life -= 0.02;
+                
+                if (particle.life <= 0) {
+                    particles.splice(index, 1);
+                }
+            });
+        }
+        
+        // Render Game
+        function render() {
+            // Clear canvas
+            ctx.fillStyle = 'linear-gradient(135deg, #1a1a2e, #16213e)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Create gradient background
+            let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#1a1a2e');
+            gradient.addColorStop(1, '#16213e');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (gameState === 'playing' || gameState === 'gameOver') {
+                // Render platforms
+                platforms.forEach(platform => {
+                    ctx.save();
+                    ctx.translate(canvas.width/2, platform.y);
+                    ctx.rotate((rotation * Math.PI) / 180);
+                    
+                    // Platform ring
+                    ctx.beginPath();
+                    ctx.arc(0, 0, platform.radius, 0, 2 * Math.PI);
+                    ctx.lineWidth = PLATFORM_HEIGHT;
+                    ctx.strokeStyle = platform.color;
+                    ctx.stroke();
+                    
+                    // Gap
+                    ctx.beginPath();
+                    let gapStartRad = (platform.gapStart * Math.PI) / 180;
+                    let gapSizeRad = (platform.gapSize * Math.PI) / 180;
+                    ctx.arc(0, 0, platform.radius, gapStartRad, gapStartRad + gapSizeRad);
+                    ctx.lineWidth = PLATFORM_HEIGHT + 4;
+                    ctx.strokeStyle = '#1a1a2e';
+                    ctx.stroke();
+                    
+                    ctx.restore();
+                });
+                
+                // Render ball
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
+                let ballGradient = ctx.createRadialGradient(ball.x - 3, ball.y - 3, 0, ball.x, ball.y, ball.radius);
+                ballGradient.addColorStop(0, '#ffffff');
+                ballGradient.addColorStop(0.7, ball.color);
+                ballGradient.addColorStop(1, '#45b7d1');
+                ctx.fillStyle = ballGradient;
+                ctx.fill();
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = ball.color;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                
+                // Render particles
+                particles.forEach(particle => {
+                    ctx.save();
+                    ctx.globalAlpha = particle.life;
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, 3, 0, 2 * Math.PI);
+                    ctx.fillStyle = particle.color;
+                    ctx.fill();
+                    ctx.restore();
+                });
+            }
+            
+            // Game Over Screen
+            if (gameState === 'gameOver') {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 48px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.fillText('Game Over', canvas.width/2, canvas.height/2 - 50);
+                
+                ctx.font = '24px Inter';
+                ctx.fillText(`Score: ${score}`, canvas.width/2, canvas.height/2);
+                ctx.fillText(`Level: ${level}`, canvas.width/2, canvas.height/2 + 30);
+                
+                if (score > highScore) {
+                    ctx.fillStyle = '#ffd700';
+                    ctx.fillText('New High Score!', canvas.width/2, canvas.height/2 + 70);
+                }
+            }
+            
+            // Menu Screen
+            if (gameState === 'menu') {
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 36px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.fillText('HelixDrop', canvas.width/2, canvas.height/2 - 50);
+                
+                ctx.font = '18px Inter';
+                ctx.fillText('Click Play to Start', canvas.width/2, canvas.height/2);
+                ctx.fillText('Use mouse/touch or arrow keys', canvas.width/2, canvas.height/2 + 30);
+            }
+        }
+        
+        // Start Game
+        function startGame() {
+            gameState = 'playing';
+            score = 0;
+            level = 1;
+            ball.x = canvas.width / 2;
+            ball.y = 100;
+            ball.velY = 0;
+            rotation = 0;
+            rotationSpeed = 0;
+            gameSpeed = 1;
+            particles = [];
+            
+            document.getElementById('currentScore').textContent = score;
+            document.getElementById('currentLevel').textContent = level;
+            
+            generatePlatforms();
+            
+            document.getElementById('playBtn').textContent = 'Playing...';
+            document.getElementById('playBtn').disabled = true;
+        }
+        
+        // Game Over
+        function gameOver() {
+            gameState = 'gameOver';
+            
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('helixdrop-highscore', highScore);
+                document.getElementById('highScore').textContent = highScore;
+            }
+            
+            document.getElementById('playBtn').innerHTML = '<i class="fas fa-play mr-2"></i>Play Again';
+            document.getElementById('playBtn').disabled = false;
+            
+            // Add explosion particles
+            addParticles(ball.x, ball.y, '#ff6b6b');
+        }
+        
+        // Input Handlers
+        let isMouseDown = false;
+        let lastMouseX = 0;
+        
+        canvas.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            lastMouseX = e.clientX;
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (isMouseDown && gameState === 'playing') {
+                let deltaX = e.clientX - lastMouseX;
+                rotationSpeed = deltaX * 0.1;
+                lastMouseX = e.clientX;
+            }
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isMouseDown = false;
+            rotationSpeed *= 0.9;
+        });
+        
+        // Touch Events
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isMouseDown = true;
+            lastMouseX = e.touches[0].clientX;
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (isMouseDown && gameState === 'playing') {
+                let deltaX = e.touches[0].clientX - lastMouseX;
+                rotationSpeed = deltaX * 0.1;
+                lastMouseX = e.touches[0].clientX;
+            }
+        });
+        
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            isMouseDown = false;
+            rotationSpeed *= 0.9;
+        });
+        
+        // Keyboard Controls
+        document.addEventListener('keydown', (e) => {
+            if (gameState === 'playing') {
+                switch(e.code) {
+                    case 'ArrowLeft':
+                        rotationSpeed = -3;
+                        break;
+                    case 'ArrowRight':
+                        rotationSpeed = 3;
+                        break;
+                }
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (gameState === 'playing') {
+                switch(e.code) {
+                    case 'ArrowLeft':
+                    case 'ArrowRight':
+                        rotationSpeed *= 0.9;
+                        break;
+                }
+            }
+        });
+        
+        // Button Event Listeners
+        document.getElementById('playBtn').addEventListener('click', () => {
+            if (gameState === 'menu' || gameState === 'gameOver') {
+                startGame();
+            }
+        });
+        
+        document.getElementById('restartBtn').addEventListener('click', () => {
+            if (gameState === 'playing' || gameState === 'gameOver') {
+                gameState = 'menu';
+                document.getElementById('playBtn').innerHTML = '<i class="fas fa-play mr-2"></i>Play Now';
+                document.getElementById('playBtn').disabled = false;
+            }
+        });
+        
+        document.getElementById('muteBtn').addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            document.getElementById('muteBtn').innerHTML = soundEnabled ? 
+                '<i class="fas fa-volume-up mr-2"></i>Sound' : 
+                '<i class="fas fa-volume-mute mr-2"></i>Muted';
+        });
+        
+        // Page Navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(pageId + 'Page').classList.add('active');
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+        
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+        
+        // Contact Form Handler
+        document.getElementById('contactForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const messageDiv = document.getElementById('formMessage');
+            
+            // Simulate form submission
+            messageDiv.className = 'mt-4 p-4 rounded-lg bg-green-900 text-green-200';
+            messageDiv.textContent = 'Thank you for your message! We\'ll get back to you soon.';
+            messageDiv.classList.remove('hidden');
+            
+            // Reset form
+            e.target.reset();
+            
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                messageDiv.classList.add('hidden');
+            }, 5000);
+        });
+        
+        // Resize Canvas
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const maxWidth = Math.min(400, container.clientWidth - 40);
+            const maxHeight = Math.min(600, window.innerHeight - 300);
+            
+            canvas.style.width = maxWidth + 'px';
+            canvas.style.height = maxHeight + 'px';
+        }
+        
+        // Initialize
+        window.addEventListener('load', () => {
+            resizeCanvas();
+            initGame();
+        });
+        
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Prevent context menu on canvas
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    </script>
+</body>
+</html>
